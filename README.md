@@ -1,4 +1,4 @@
-# A Bulk Phase Transformation Drives Ammonia Synthesis on Barium Hydride                                                #### Axel Tosello Gardini, Umberto Raucci, and Michele Parrinello
+# A Bulk Phase Transformation Drives Ammonia Synthesis on Barium Hydride                                               #### Axel Tosello Gardini, Umberto Raucci, and Michele Parrinello
 
 [![arXiv](https://chemrxiv.org/engage/chemrxiv/article-details/667d85e15101a2ffa8b8ca77)
 
