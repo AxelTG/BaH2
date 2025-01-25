@@ -1,0 +1,90 @@
+###################################################################
+variable	      p_id            world ".0." ".1." ".2." ".3."
+variable        NSTEPS2         equal 2000000
+variable	      NSTEPS_REST	    equal 1000000
+variable        THERMO_FREQ     equal 2000
+variable        DUMP_FREQ       equal 2000
+variable	      MOD_OUT_FREQ	  equal 2000
+variable        TEMP            equal 550 #K 
+variable        SEED1           world 31673 41849 76524 52412
+variable        SEED2           world 42737 86373 7412 741232
+variable        dt              equal 0.0005 #ps, i.e. 1000*fs
+variable        TAU_T           equal 0.05
+variable        TAU_P           equal 0.25
+variable        PRE             equal 1.0
+variable        potential_path  string /path/to/graphs
+
+shell mkdir results${p_id} 
+
+###################################################################
+units           metal
+boundary        p p p
+restart		${NSTEPS_REST} lmp${p_id}restart                       
+atom_style      atomic
+neigh_modify    delay 10 every 1
+
+# TIMESTEP
+timestep	${dt}  #ps 
+
+###################################################################
+if "${rest}==1" then &	
+	"read_data  data.lmp" &
+else &
+        "read_restart lmp${p_id}restart.*"
+
+mass          1 137.327
+mass          2 2.014
+mass          3 14.0067
+
+###################################################################
+
+pair_style deepmd ${potential_path}/graph-1.pb 
+pair_coeff  * *
+
+###################################################################
+#groups
+group Ba type 1
+group Htot type 2
+group N type 3
+# The following is the group of H bounded to N:
+group Hn id 144 138 136 134 141 137 135 133 139 143 142 140 288 282 280 278 285 281 279 277 283 287 286 284 432 426 424 422 429 425 423 421 427 431 430 428 576 570 568 566 573 569 567 565 571 575 574 572 720 714 712 710 717 713 711 709 715 719 718 716 864 858 856 854 861 857 855 853 859 863 862 860 1008 1002 1000 998 1005 1001 999 997 1003 1007 1006 1004 1152 1146 1144 1142 1149 1145 1143 1141 1147 1151 1150 1148
+# The following is the group of H as hydrides:
+group H subtract Htot Hn
+
+###################################################################
+# compute
+compute msdH H msd com yes
+compute msdN N msd com yes
+
+fix 3 N ave/time ${THERMO_FREQ} 1 ${THERMO_FREQ}  c_msdN[*] file results${p_id}/msd_N_${ITER}.dat 
+fix 4 N vector  ${THERMO_FREQ}  c_msdN[4]
+fix 5 H ave/time ${THERMO_FREQ} 1 ${THERMO_FREQ}  c_msdH[*] file results${p_id}/msd_H_${ITER}.dat
+fix 6 H vector  ${THERMO_FREQ}  c_msdH[4]
+
+variable  fitslopeN equal slope(f_4)/6/(${THERMO_FREQ}*${dt}*1000)
+variable  fitslopeH equal slope(f_6)/6/(${THERMO_FREQ}*${dt}*1000)
+
+###################################################################
+#thermo
+thermo          ${THERMO_FREQ}
+thermo_style    custom step temp pe ke etotal density press vol c_msdN[4] v_fitslopeN c_msdH[4] v_fitslopeH #cella cellb cellc cellalpha cellbeta cellgamma
+thermo_modify   flush yes
+
+###################################################################
+# DUMP
+dump		myDump all xyz ${DUMP_FREQ} dump${p_id}/dump.xyz
+dump_modify	myDump append yes element Ba H N
+
+###################################################################
+## Production - NVT
+if "${rest}==1" then &
+	"shell mkdir dump${p_id}" &
+	"velocity        all create ${TEMP} ${SEED2} dist gaussian"
+
+fix             1 all nve
+fix             2 all temp/csvr ${TEMP} ${TEMP} ${TAU_T} ${SEED2}
+run             ${NSTEPS2}
+unfix 1
+unfix 2
+# ---------- End --------------------- 
+#write_restart  restart${p_id}end
