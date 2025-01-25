@@ -1,0 +1,96 @@
+{
+    "model": {
+      "type_map":           ["Ba","H","N"],      
+	  "descriptor": {
+		"_comment":         "if type = se_a_tpe: can’t apply compression method while using atom type embedding",
+        "type":             "se_atten",
+		"_comment":         "sel: [16 32 32] means maximal number of neighbors = 16H 32O 32N",
+		"_comment":         "sel: auto:1.1 means automatically counts maximal number of neighbors*1.1",
+        "sel":              120,
+        "rcut_smth":        0.5,
+        "rcut":             6.0,
+        "neuron":           [25,50,100],
+		"_activation_function": "tanh",
+        "resnet_dt":        false,
+		"_comment":         "axis_neuron: Size of the submatrix of G (embedding matrix)",
+        "axis_neuron":      12,
+        "attn":	            100,
+        "attn_layer":       2,
+        "attn_dotr":        true,
+        "attn_mask":        false,		
+		"seed":             20230727,
+	    "_comment":		    "descriptor that's all--------------------------------------------------------------"      
+      },
+	  "fitting_net" : {
+		"type": "dos",
+		"_comment":         "atomic label should be named atomic_dos.npy/raw",
+	    "_comment":		    "numb_dos specifies the length of output vector for each atom, i.e. atomic charge",		
+		"numb_dos": 1,
+	    "_comment":		    "If not set sel_type, all atom types will be selected.",				
+		"_sel_type": [0], 
+		"neuron": [240,240,240],
+		"resnet_dt": true,
+		"numb_fparam": 0,
+		"seed": 20230727,
+	    "_comment":		    "fitting_net that's all-------------------------------------------------------------"	
+	  },	  
+    "_comment": " model that's all------------------------------------------------------------------------------"
+    },
+
+	"loss" : {
+		"_comment": "loss = pref * global_loss + pref_atomic * atomic_loss",
+		"type": "dos",
+		"start_pref_dos": 0.0,
+		"limit_pref_dos": 0.0,
+		"start_pref_cdf": 0.0,
+		"limit_pref_cdf": 0.0,
+		"start_pref_ados": 1.0,
+		"limit_pref_ados": 1.0,
+		"start_pref_acdf": 0.0,
+		"limit_pref_acdf": 0.0,
+	    "_comment": " loss that's all-----------------------------------------------------------------------------"
+    },
+
+    "learning_rate": {
+		"_comment": "lr(t) = start_lr * decay_rate ^ ( training step / decay_steps )",
+		"_comment": "decay_rate and decay_steps are automatically determined by start_lr, stop_lr and training step)",
+        "type":              "exp",
+		"_comment": "When parallel training or batch size scaled, how to alter learning rate. Valid values are linear`(default), `sqrt or none.",
+		"_scale_by_worker":   "sqrt",
+        "start_lr":          1e-03,
+	"stop_lr":               1e-08,
+	    "_comment": " learning_rate that's all--------------------------------------------------------------------"
+    },
+
+    "training": {
+        "numb_steps":        2000000,
+	"seed":                  20230727,
+        "disp_file":         "lcurve.out",
+        "disp_freq":         1000,
+        "numb_test":         10,
+        "save_freq":         10000,
+        "save_ckpt":         "model.ckpt",
+        "disp_training":     true,
+        "time_training":     true,
+        "profiling":         false,
+        "profiling_file":    "timeline.json",
+	"training_data": {
+	    "systems":		 [
+			"/path/to/data/N2_ads",
+			"/path/to/data/N2_diss",
+			"/path/to/data/NNH_1",
+			"/path/to/data/NNH_2",
+			"/path/to/data/NNH_3",
+			"/path/to/data/NNH_4",
+			"/path/to/data/NNH_5",
+			"/path/to/data/NNH_6",
+			"/path/to/data/NNH_7",
+			"/path/to/data/NNH_8",
+			"/path/to/data/NNH_9/1"],
+	    "batch_size":	"auto",
+        "_auto_prob": 	"prob_sys_size; 0:18:0.8; 18:21:0.2",	
+	    "_comment": " training_data that's all--------------------------------------------------------------------"
+		},
+		"_comment": " training that's all-------------------------------------------------------------------------"	
+    }
+}
