@@ -1,0 +1,73 @@
+variable	      p_id            world ".0." ".1." ".2."  ".3."
+variable        NSTEPS2         equal 7000000
+variable        NSTEPS_REST     equal 1000000
+variable        THERMO_FREQ     equal 2000
+variable        DUMP_FREQ       equal 2000
+variable        TEMP            equal 550 # temperature in K. Change according to T you want to simulate. 
+variable        SEED1           world 31673 41849 63810 64318
+variable        SEED2           world 42737 86373 57181 97261
+variable        dt              equal 0.0005 #ps, i.e. 1000*fs
+variable        TAU_T           equal 0.05
+variable        potential_path  string /path/to/graph
+
+shell mkdir results${p_id}
+shell mkdir dump${p_id}
+
+###################################################################
+units           metal
+boundary        p p p
+atom_style      atomic
+neigh_modify    delay 10 every 1
+
+# TIMESTEP
+timestep	      ${dt}  #ps 
+
+###################################################################
+restart         ${NSTEPS_REST} lmp${p_id}restart 
+
+if "${rest}==1" then &	
+	"read_data  data.lmp" &
+else &
+  "read_restart lmp${p_id}restart.*"
+
+mass          1 137.327 # Ba
+mass          2 2.014   # H
+
+group         Ba type 1
+group         H type 2
+
+###################################################################
+pair_style deepmd ${potential_path}/graph1.pb
+pair_coeff  * *
+
+###################################################################
+compute msdH H msd com yes
+
+fix 1 H ave/time ${THERMO_FREQ} 1 ${THERMO_FREQ}  c_msdH[*] file results${p_id}/msd_H_${ITER}.dat
+fix 2 H vector  ${THERMO_FREQ}  c_msdH[4]
+
+variable  fitslopeH equal slope(f_2)/6/(${THERMO_FREQ}*${dt}*1000)
+
+###################################################################
+#thermo
+thermo          ${THERMO_FREQ}
+thermo_style    custom step temp pe ke etotal density press vol
+thermo_modify   flush yes
+
+###################################################################
+# DUMP
+dump		myDump all xyz ${DUMP_FREQ} dump${p_id}/dump.xyz
+dump_modify	myDump append yes element Ba H
+
+###################################################################
+## Production - NVT
+if "${rest}==1" then &
+  "velocity        all create ${TEMP} ${SEED2} dist gaussian"
+
+fix             3 all nve
+fix             4 all temp/csvr ${TEMP} ${TEMP} ${TAU_T} ${SEED2}
+run             ${NSTEPS2}
+unfix 1
+unfix 2
+# ---------- End --------------------- 
+#write_restart  restart${p_id}end
