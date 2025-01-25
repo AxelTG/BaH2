@@ -1,0 +1,88 @@
+###################################################################
+variable	      p_id            world ".0." ".1." ".2." ".3."
+variable        NSTEPS2         equal 2000000
+variable	      NSTEPS_REST	    equal 1000000
+variable        THERMO_FREQ     equal 2000
+variable        DUMP_FREQ       equal 2000
+variable        TEMP            equal 550 #K This is the temperature in K. Change according to the T you want to simulate.
+variable        SEED1           world 31673 41849 76524 52412
+variable        SEED2           world 42737 86373 7412 741232
+variable        dt              equal 0.0005 #ps, i.e. 1000*fs
+variable        TAU_T           equal 0.05
+variable        TAU_P           equal 0.25
+variable        potential_path  string /path/to/graphs
+
+shell mkdir results${p_id} 
+
+###################################################################
+units           metal
+boundary        p p p
+restart		      ${NSTEPS_REST} lmp${p_id}restart                       
+atom_style      atomic
+neigh_modify    delay 10 every 1
+
+# TIMESTEP
+timestep	${dt}  #ps 
+
+###################################################################
+if "${rest}==1" then &	
+	"read_data  data.lmp" &
+else &
+        "read_restart lmp${p_id}restart.*"
+
+mass          1 137.327
+mass          2 2.014
+mass          3 14.0067
+
+###################################################################
+
+pair_style deepmd ${potential_path}/graph-1.pb
+pair_coeff  * *
+
+###################################################################
+#groups
+group Ba type 1
+group Htot type 2
+group N type 3
+# The following is the gorup of H atoms bounded to N:
+group Hn id 108 102 100 118 692 111 115 98 689 117 110 109 120 105 101 99 385 103 695 683 114 106 112 104 252 246 244 262 836 255 259 242 833 261 254 253 264 249 245 243 529 247 839 827 258 250 256 248 396 390 388 406 980 399 403 386 977 405 398 397 408 393 389 387 97 391 983 971 402 394 400 392 540 534 532 550 1124 543 547 530 1121 549 542 541 552 537 533 531 241 535 1127 1115 546 538 544 536 684 678 676 694 116 687 691 674 113 693 686 685 696 681 677 675 961 679 119 107 690 682 688 680 828 822 820 838 260 831 835 818 257 837 830 829 840 825 821 819 1105 823 263 251 834 826 832 824 972 966 964 982 404 975 979 962 401 981 974 973 984 969 965 963 673 967 407 395 978 970 976 968 1116 1110 1108 1126 548 1119 1123 1106 545 1125 1118 1117 1128 1113 1109 1107 817 1111 551 539 1122 1114 1120 1112
+# The following is the group of H as hydrides:
+group H subtract Htot Hn
+
+###################################################################
+# compute
+compute msdH H msd com yes
+compute msdN N msd com yes
+
+fix 3 N ave/time ${THERMO_FREQ} 1 ${THERMO_FREQ}  c_msdN[*] file results${p_id}/msd_N_${ITER}.dat 
+fix 4 N vector  ${THERMO_FREQ}  c_msdN[4]
+fix 5 H ave/time ${THERMO_FREQ} 1 ${THERMO_FREQ}  c_msdH[*] file results${p_id}/msd_H_${ITER}.dat
+fix 6 H vector  ${THERMO_FREQ}  c_msdH[4]
+
+variable  fitslopeN equal slope(f_4)/6/(${THERMO_FREQ}*${dt}*1000)
+variable  fitslopeH equal slope(f_6)/6/(${THERMO_FREQ}*${dt}*1000)
+
+###################################################################
+#thermo
+thermo          ${THERMO_FREQ}
+thermo_style    custom step temp pe ke etotal density press vol c_msdN[4] v_fitslopeN c_msdH[4] v_fitslopeH #cella cellb cellc cellalpha cellbeta cellgamma
+thermo_modify   flush yes
+
+###################################################################
+# DUMP
+dump		myDump all xyz ${DUMP_FREQ} dump${p_id}/dump.xyz
+dump_modify	myDump append yes element Ba H N
+
+###################################################################
+## Production - NVT
+if "${rest}==1" then &
+	"shell mkdir dump${p_id}" &
+	"velocity        all create ${TEMP} ${SEED2} dist gaussian"
+
+fix             1 all nve
+fix             2 all temp/csvr ${TEMP} ${TEMP} ${TAU_T} ${SEED2}
+run             ${NSTEPS2}
+unfix 1
+unfix 2
+# ---------- End --------------------- 
+#write_restart  restart${p_id}end
