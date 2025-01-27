@@ -17,17 +17,20 @@ cHH: COORDINATIONNUMBER SPECIES=H R_0=1.5 NN=6 MM=12 MAX={BETA=0.05}
 dHH: DISTANCES GROUP=H MIN={BETA=20.0}
 #uwall: UPPER_WALLS ARG=cHH.max AT=0.6 KAPPA=1000.0 EXP=2
 
+# This is just an example of set up. 
+# The temperature must be changed according to the T you want to simulate.
+
 target1: CUSTOM ARG=dNH.min FUNC=step(1.8-x) PERIODIC=NO
 
 OPES_METAD ...
    LABEL=opes1
    ARG=dNH.min
    FILE=Kernels1.data
-   TEMP=550
+   TEMP=550 # Change according to the T you want to simulate.
    PACE=200
    BARRIER=55
-   SIGMA=0.05
-   FIXED_SIGMA
+   #SIGMA=0.05
+   #FIXED_SIGMA
    #ADAPTIVE_SIGMA_STRIDE=5001
    RESTART=NO
    EXCLUDED_REGION=target1
