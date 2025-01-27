@@ -26,11 +26,11 @@ OPES_METAD ...
    LABEL=opes1
    ARG=dNN.mean
    FILE=Kernels1.data
-   TEMP=550
+   TEMP=550 # To be changed according to the T you want to simulate.
    PACE=200
    BARRIER=30
-   SIGMA=0.02
-   FIXED_SIGMA
+   #SIGMA=0.02
+   #FIXED_SIGMA
    #ADAPTIVE_SIGMA_STRIDE=5001
    RESTART=NO
    EXCLUDED_REGION=target1
