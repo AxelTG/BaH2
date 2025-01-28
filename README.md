@@ -1,4 +1,4 @@
-# A Bulk Phase Transformation Drives Ammonia Synthesis on Barium Hydride                                              
+# Machine Learning-Driven Molecular Dynamics Unveil a Bulk Phase Transformation Driving Ammonia Synthesis on Barium Hydride                                             
 
 #### Axel Tosello Gardini, Umberto Raucci, and Michele Parrinello
 
