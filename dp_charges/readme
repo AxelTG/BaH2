@@ -1,0 +1,4 @@
+This folder contains:
+- the frozen model that predicts the bader charges for atoms in the system during the reaction N2 + 2e- + H- -> NNH(3-).
+- the .pb file used for training the model.
+- a python script used for inferring the charges in post-processing. 
