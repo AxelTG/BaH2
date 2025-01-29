@@ -1,0 +1,2 @@
+This folder contains the files needed to reproduce the free energy surface (FES) for the adsorption of N2 and the following formation of NNH(3-).
+The script is used to compute the alpha shape of the surface.
