@@ -2,8 +2,7 @@
 
 #### Axel Tosello Gardini, Umberto Raucci, and Michele Parrinello
 
-
-[![arXiv](https://chemrxiv.org/engage/chemrxiv/article-details/667d85e15101a2ffa8b8ca77)
+(https://chemrxiv.org/engage/chemrxiv/article-details/667d85e15101a2ffa8b8ca77)
 
 This repository contains:
 1. four models trained with DeePMD-kit
