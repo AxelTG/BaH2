@@ -18,7 +18,7 @@ read_data     data.lmp
 mass          1 137.327
 mass          2 2.014
 mass          3 14.0067
-region	      1 block INF INF INF INF INF 25.0
+region	      1 block INF INF INF INF INF 35.0
 group         bottom region 1
 group         atoms1 subtract all bottom
 
