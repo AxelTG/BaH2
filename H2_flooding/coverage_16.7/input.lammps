@@ -1,0 +1,49 @@
+variable        NSTEPS1         equal 600000000
+variable        DUMP_FREQ       equal 2000
+variable        DUMP_FREQ1      equal 2000
+variable        TEMP            equal 700
+variable	      SEED1           equal 42771
+variable	      SEED2           equal 54489 
+variable        TAU_T           equal 0.05
+variable        TAU_P           equal 0.25
+
+units           metal
+boundary        p p f
+
+restart 20000 lmp.restart
+atom_style      atomic
+neigh_modify    delay 10 every 1
+
+read_data     data.lmp
+mass          1 137.327
+mass          2 2.014
+mass          3 14.0067
+region	      1 block INF INF INF INF INF 25.0
+group         bottom region 1
+group         atoms1 subtract all bottom
+
+pair_style deepmd /path/to/graphs/graph-1.pb 
+pair_coeff * *
+
+# COMPUTE
+
+# TIMESTEP
+timestep	      0.0005  #ps 
+thermo          ${DUMP_FREQ}
+thermo_style    custom step temp pe ke etotal density press vol
+thermo_modify   flush yes
+
+# DUMP
+dump            myDump all xyz ${DUMP_FREQ1} dump.0.xyz
+dump_modify     myDump append yes element Ba H N
+#dump            myDump3 all atom ${DUMP_FREQ1} dump.lammpstrj
+#dump_modify     myDump3 append yes
+
+
+# run- NVT
+velocity        all create ${TEMP} ${SEED2} dist gaussian
+fix             4 all plumed plumedfile plumed.dat
+fix             2 atoms1 nve
+fix             3 atoms1 temp/csvr ${TEMP} ${TEMP} ${TAU_T} ${SEED2}
+fix             5 all wall/reflect zlo 0.0 zhi 75.0
+run             ${NSTEPS1}
