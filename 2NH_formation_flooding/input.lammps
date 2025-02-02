@@ -7,6 +7,7 @@ variable	SEED1           equal 42771
 variable	SEED2           equal 54489 
 variable        TAU_T           equal 0.05
 variable        TAU_P           equal 0.25
+variable        potential_path  string /path/to/graphs
 
 units           metal
 boundary        p p f
